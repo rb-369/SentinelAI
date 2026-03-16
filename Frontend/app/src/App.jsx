@@ -1,135 +1,177 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useMemo, useState } from "react";
+import { analyzeThreat, clearHistory, getHistory, getStats } from "./api/threatApi";
+import Header from "./components/Header";
+import ScannerPanel from "./components/ScannerPanel";
+import ResultCard from "./components/ResultCard";
+import StatsBar from "./components/StatsBar";
+import HistoryTable from "./components/HistoryTable";
+
+const EMPTY_STATS = { breakdown: [], total: 0, recent: [] };
+
+const normalizeStats = (payload) => {
+  if (!payload || typeof payload !== "object") {
+    return EMPTY_STATS;
+  }
+  return {
+    breakdown: Array.isArray(payload.breakdown) ? payload.breakdown : [],
+    total: typeof payload.total === "number" ? payload.total : 0,
+    recent: Array.isArray(payload.recent) ? payload.recent : [],
+  };
+};
+
+const isSameDay = (dateA, dateB) => {
+  if (!dateA || !dateB) return false;
+  return (
+    dateA.getFullYear() === dateB.getFullYear() &&
+    dateA.getMonth() === dateB.getMonth() &&
+    dateA.getDate() === dateB.getDate()
+  );
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [currentResult, setCurrentResult] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [stats, setStats] = useState(EMPTY_STATS);
+  const [activeFilter, setActiveFilter] = useState("ALL");
+  const [inputType, setInputType] = useState("url");
+  const [error, setError] = useState("");
+
+  const loadDashboard = async () => {
+    try {
+      setError("");
+      const [historyResponse, statsResponse] = await Promise.all([
+        getHistory({ page: 1, limit: 100 }),
+        getStats(),
+      ]);
+
+      setHistory(Array.isArray(historyResponse.data) ? historyResponse.data : []);
+      setStats(normalizeStats(statsResponse.data));
+    } catch (err) {
+      setError(err.message || "Could not load dashboard data.");
+    }
+  };
+
+  const refreshStats = async () => {
+    try {
+      const statsResponse = await getStats();
+      setStats(normalizeStats(statsResponse.data));
+    } catch (err) {
+      setError(err.message || "Could not refresh stats.");
+    }
+  };
+
+  useEffect(() => {
+    void loadDashboard();
+  }, []);
+
+  const onAnalyzeThreat = async (rawInput) => {
+    const input = rawInput.trim();
+    if (!input) {
+      setError("Please enter suspicious content to analyze.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError("");
+
+      const response = await analyzeThreat(input, inputType);
+      const createdThreat = response.data;
+
+      setCurrentResult(createdThreat);
+      setHistory((prev) => [createdThreat, ...prev]);
+      await refreshStats();
+    } catch (err) {
+      setError(err.message || "Threat analysis failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onClearHistory = async () => {
+    try {
+      await clearHistory();
+      setHistory([]);
+      setCurrentResult(null);
+      setActiveFilter("ALL");
+      await refreshStats();
+    } catch (err) {
+      setError(err.message || "Failed to clear history.");
+    }
+  };
+
+  const filteredHistory = useMemo(() => {
+    if (activeFilter === "ALL") {
+      return history;
+    }
+    return history.filter((item) => item.riskLevel === activeFilter);
+  }, [activeFilter, history]);
+
+  const highThreatsToday = useMemo(() => {
+    const now = new Date();
+    return history.filter((item) => {
+      const createdAt = item?.createdAt ? new Date(item.createdAt) : null;
+      return item?.riskLevel === "HIGH" && isSameDay(createdAt, now);
+    }).length;
+  }, [history]);
+
+  const dashboardStats = useMemo(() => {
+    const totalScans = stats.total || history.length;
+    const highFromBreakdown =
+      stats.breakdown.find((entry) => entry._id === "HIGH")?.count || 0;
+    const highThreats = highFromBreakdown || history.filter((item) => item.riskLevel === "HIGH").length;
+
+    const avgRiskScore = history.length
+      ? Math.round(
+          history.reduce((acc, item) => acc + (Number(item.riskScore) || 0), 0) / history.length,
+        )
+      : 0;
+
+    const threatTypeCount = history.reduce((acc, item) => {
+      const key = item.threatType || "Unknown";
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    const mostCommonThreatType =
+      Object.entries(threatTypeCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+
+    return { totalScans, highThreats, avgRiskScore, mostCommonThreatType };
+  }, [history, stats]);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img
-            src={heroImg}
-            className="base pointer-events-none select-none"
-            width="170"
-            height="179"
-            alt=""
-          />
-          <img
-            src={reactLogo}
-            className="framework pointer-events-none select-none"
-            alt="React logo"
-          />
-          <img
-            src={viteLogo}
-            className="vite pointer-events-none select-none"
-            alt="Vite logo"
-          />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen bg-slate-50 text-slate-800">
+      <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8">
+        <Header totalScans={dashboardStats.totalScans} highToday={highThreatsToday} />
 
-      <div className="ticks"></div>
+        {error ? (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {error}
+          </div>
+        ) : null}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <ScannerPanel
+          inputType={inputType}
+          setInputType={setInputType}
+          isLoading={isLoading}
+          onAnalyze={onAnalyzeThreat}
+        />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {currentResult ? <ResultCard result={currentResult} /> : null}
+
+        <StatsBar stats={dashboardStats} />
+
+        <HistoryTable
+          history={filteredHistory}
+          totalHistory={history}
+          activeFilter={activeFilter}
+          setActiveFilter={setActiveFilter}
+          onClearHistory={onClearHistory}
+        />
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
