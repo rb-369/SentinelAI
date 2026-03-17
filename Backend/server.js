@@ -7,7 +7,16 @@ const threatController = require("./controllers/threatController");
 const authController = require("./controllers/authController");
 const authMiddleware = require("./middleware/authMiddleware");
 
+const parseCorsOrigins = () => {
+	const raw = process.env.CORS_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173";
+	return raw
+		.split(",")
+		.map((origin) => origin.trim())
+		.filter(Boolean);
+};
+
 const app = express();
+const corsOrigins = parseCorsOrigins();
 const upload = multer({
 	storage: multer.memoryStorage(),
 	limits: { fileSize: 5 * 1024 * 1024 },
@@ -37,7 +46,12 @@ const screenshotUpload = (req, res, next) => {
 
 connectDB();
 
-app.use(cors());
+app.use(
+	cors({
+		origin: corsOrigins.includes("*") ? true : corsOrigins,
+		credentials: true,
+	}),
+);
 app.use(express.json());
 
 app.post("/api/auth/register", authController.register);
@@ -60,4 +74,4 @@ app.delete("/api/history", authMiddleware, threatController.deleteHistory);
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+app.listen(PORT, () => console.log(`sentinelAI backend API running on port ${PORT}`));

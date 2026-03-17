@@ -1,5 +1,5 @@
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-const TOKEN_KEY = "threatlens_auth_token";
+const TOKEN_KEY = "sentinelai_auth_token";
 
 const getToken = () => localStorage.getItem(TOKEN_KEY);
 

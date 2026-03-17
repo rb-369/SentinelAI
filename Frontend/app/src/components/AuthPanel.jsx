@@ -35,14 +35,22 @@ function AuthPanel({ onLogin, onRegister, isLoading }) {
     "inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:focus:ring-offset-gray-900";
 
   return (
-    <section className="rounded-xl border bg-card p-6 shadow-lg dark:shadow-blue-500/10">
-      <div className="mb-6 flex gap-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+    <section className="rounded-2xl border border-cyan-100 bg-white/85 p-6 shadow-lg shadow-cyan-900/5 backdrop-blur-md">
+      <div className="mb-5 flex items-center gap-3">
+        <img src="/logo.png" alt="sentinelAI logo" className="h-10 w-10 rounded-xl border border-cyan-100 bg-white p-1" />
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">sentinelAI Access</p>
+          <p className="text-sm text-slate-600">Secure sign in to your threat intelligence dashboard.</p>
+        </div>
+      </div>
+
+      <div className="mb-6 flex gap-2 rounded-xl bg-slate-100 p-1">
         <button
           onClick={() => setMode("login")}
           className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
             mode === "login"
-              ? "bg-white text-blue-700 shadow-sm dark:bg-gray-700 dark:text-white"
-              : "text-gray-600 dark:text-gray-300"
+              ? "bg-white text-cyan-700 shadow-sm"
+              : "text-slate-600"
           }`}
         >
           Login
@@ -51,8 +59,8 @@ function AuthPanel({ onLogin, onRegister, isLoading }) {
           onClick={() => setMode("register")}
           className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition-all duration-200 ${
             mode === "register"
-              ? "bg-white text-blue-700 shadow-sm dark:bg-gray-700 dark:text-white"
-              : "text-gray-600 dark:text-gray-300"
+              ? "bg-white text-cyan-700 shadow-sm"
+              : "text-slate-600"
           }`}
         >
           Register

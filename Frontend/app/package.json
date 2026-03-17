@@ -1,7 +1,10 @@
 {
-  "name": "app",
+  "name": "sentinelai-frontend",
   "private": true,
   "version": "0.0.0",
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +14,8 @@
   },
   "dependencies": {
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.9.5"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

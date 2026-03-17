@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage
-from langchain_core.output_parsers import JsonOutputParser
 from PIL import Image, UnidentifiedImageError, ImageFile
 import os
 from dotenv import load_dotenv
@@ -16,11 +15,19 @@ import io
 load_dotenv()
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-app = FastAPI(title="ThreatLens AI Service", version="1.0.0")
+def parse_allowed_origins():
+    raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
+    origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    return origins or ["*"]
+
+
+app = FastAPI(title="sentinelAI AI Service", version="1.0.0")
+
+allowed_origins = parse_allowed_origins()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -30,8 +37,6 @@ llm = ChatGoogleGenerativeAI(
     google_api_key=os.getenv("GEMINI_API_KEY"),
     temperature=0.1,
 )
-
-json_parser = JsonOutputParser()
 
 
 class AnalyzeRequest(BaseModel):
@@ -225,7 +230,7 @@ async def analyze_screenshot(
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "ThreatLens AI"}
+    return {"status": "ok", "service": "sentinelAI AI"}
 
 # Add to main.py — keeps the service alive
 @app.get("/ping")

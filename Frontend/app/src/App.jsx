@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 import {
   analyzeScreenshot,
   analyzeThreat,
@@ -9,9 +10,9 @@ import {
   getHistory,
   getStats,
   loginUser,
-  reportThreat,
   logoutUser,
   registerUser,
+  reportThreat,
 } from "./api/threatApi";
 import Header from "./components/Header";
 import AuthPanel from "./components/AuthPanel";
@@ -48,6 +49,7 @@ function App() {
   const [communityIntel, setCommunityIntel] = useState(null);
   const [areaIntel, setAreaIntel] = useState(null);
   const [areaIntelLoading, setAreaIntelLoading] = useState(false);
+  const [areaQuery, setAreaQuery] = useState("");
   const [reportingThreatId, setReportingThreatId] = useState(null);
   const [reportStatus, setReportStatus] = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
@@ -79,7 +81,7 @@ function App() {
 
   const loadAreaIntel = async (location = "") => {
     try {
-      const targetLocation = (location || user?.location || "").trim();
+      const targetLocation = (location || areaQuery || user?.location || "").trim();
       if (!targetLocation) {
         setAreaIntel(null);
         return;
@@ -88,6 +90,7 @@ function App() {
       setAreaIntelLoading(true);
       const response = await getAreaThreatIntelligence(targetLocation);
       setAreaIntel(response?.data || null);
+      setAreaQuery(targetLocation);
     } catch (err) {
       setError(err.message || "Failed to load area threat intelligence.");
     } finally {
@@ -116,11 +119,13 @@ function App() {
       setCurrentResult(null);
       setCommunityIntel(null);
       setAreaIntel(null);
+      setAreaQuery("");
       setReportStatus("");
       setActiveFilter("ALL");
       return;
     }
 
+    setAreaQuery(user.location || "");
     void Promise.all([loadHistory(), loadStats(), loadAreaIntel(user.location)]);
   }, [user]);
 
@@ -295,83 +300,139 @@ function App() {
 
   const activeCommunityIntel = communityIntel || currentResult?.communityIntelligence || null;
 
+  const handleAreaLookup = (event) => {
+    event.preventDefault();
+    void loadAreaIntel(areaQuery);
+  };
+
+  const dashboardPage = (
+    <>
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <ScannerPanel
+          inputType={inputType}
+          setInputType={setInputType}
+          isLoading={isLoading}
+          onAnalyze={onAnalyzeThreat}
+        />
+        <ScreenshotDetector isLoading={screenshotLoading} onAnalyze={onAnalyzeScreenshot} />
+      </div>
+
+      {currentResult ? (
+        <div className="mt-8">
+          <ResultCard
+            result={currentResult}
+            onReport={handleReportThreat}
+            isReporting={reportingThreatId === currentResult?._id}
+            reportStatus={reportStatus}
+          />
+        </div>
+      ) : null}
+
+      {activeCommunityIntel ? (
+        <div className="mt-8">
+          <CommunityIntelCard
+            intelligence={activeCommunityIntel}
+            threatType={currentResult?.threatType}
+            inputType={currentResult?.inputType}
+          />
+        </div>
+      ) : null}
+
+      <div className="mt-8">
+        <StatsBar stats={dashboardStats} />
+      </div>
+
+      <div className="mt-8">
+        <HistoryTable
+          history={filteredHistory}
+          totalHistory={history}
+          activeFilter={activeFilter}
+          setActiveFilter={setActiveFilter}
+          onClearHistory={onClearHistory}
+          onReportThreat={handleReportThreat}
+          reportingThreatId={reportingThreatId}
+        />
+      </div>
+    </>
+  );
+
+  const areaPage = (
+    <>
+      <section className="rounded-2xl border border-cyan-100 bg-white/85 p-6 shadow-lg shadow-cyan-900/5 backdrop-blur-md">
+        <h2 className="font-display text-2xl font-bold text-slate-900">Scams/Frauds Happening In Your Area</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Explore live community-reported scams in your location to stay ahead of active fraud campaigns.
+        </p>
+
+        <form onSubmit={handleAreaLookup} className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <input
+            type="text"
+            value={areaQuery}
+            onChange={(event) => setAreaQuery(event.target.value)}
+            placeholder="Enter city or area (e.g., Mumbai)"
+            className="w-full rounded-xl border border-cyan-100 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition-colors focus:border-cyan-400"
+            required
+          />
+          <button
+            type="submit"
+            disabled={areaIntelLoading}
+            className="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:pointer-events-none disabled:opacity-60"
+          >
+            {areaIntelLoading ? "Checking..." : "Check Area Intelligence"}
+          </button>
+        </form>
+      </section>
+
+      <div className="mt-8">
+        <AreaFraudIntelCard
+          data={areaIntel}
+          isLoading={areaIntelLoading}
+          onRefresh={() => loadAreaIntel(areaQuery)}
+          location={areaQuery || user?.location}
+        />
+      </div>
+    </>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <Header totalScans={dashboardStats.totalScans} highToday={highThreatsToday} />
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#f5fbff] via-[#f7fafc] to-[#fff6ef] text-slate-900">
+      <div className="pointer-events-none absolute left-[-8rem] top-[-5rem] h-72 w-72 rounded-full bg-cyan-200/40 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-[-8rem] right-[-6rem] h-80 w-80 rounded-full bg-amber-200/40 blur-3xl" />
+
+      <div className="relative container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <Header totalScans={dashboardStats.totalScans} highToday={highThreatsToday} user={user} />
 
         {error ? (
           <div
             role="alert"
-            className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-500 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-400"
+            className="mb-6 rounded-xl border border-rose-300/80 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600"
           >
             <span className="font-bold">Error:</span> {error}
           </div>
         ) : null}
 
         {!user ? (
-          <div className="mx-auto max-w-md">
+          <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-2">
+            <section className="rounded-2xl border border-cyan-100 bg-white/85 p-6 shadow-lg shadow-cyan-900/5 backdrop-blur-md">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Sentinel Community</p>
+              <h2 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-900">
+                Detect scams faster with AI plus local community signals.
+              </h2>
+              <p className="mt-3 text-sm text-slate-600">
+                sentinelAI combines real-time threat analysis, reporting workflows, and area-level fraud intelligence in one secure dashboard.
+              </p>
+            </section>
             <AuthPanel onLogin={handleLogin} onRegister={handleRegister} isLoading={authLoading} />
           </div>
         ) : (
           <>
             <UserDashboard user={user} onLogout={handleLogout} />
 
-            <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <ScannerPanel
-                inputType={inputType}
-                setInputType={setInputType}
-                isLoading={isLoading}
-                onAnalyze={onAnalyzeThreat}
-              />
-              <ScreenshotDetector isLoading={screenshotLoading} onAnalyze={onAnalyzeScreenshot} />
-            </div>
-
-            {currentResult ? (
-              <div className="mt-8">
-                <ResultCard
-                  result={currentResult}
-                  onReport={handleReportThreat}
-                  isReporting={reportingThreatId === currentResult?._id}
-                  reportStatus={reportStatus}
-                />
-              </div>
-            ) : null}
-
-            {activeCommunityIntel ? (
-              <div className="mt-8">
-                <CommunityIntelCard
-                  intelligence={activeCommunityIntel}
-                  threatType={currentResult?.threatType}
-                  inputType={currentResult?.inputType}
-                />
-              </div>
-            ) : null}
-
-            <div className="mt-8">
-              <StatsBar stats={dashboardStats} />
-            </div>
-
-            <div className="mt-8">
-              <AreaFraudIntelCard
-                data={areaIntel}
-                isLoading={areaIntelLoading}
-                onRefresh={() => loadAreaIntel()}
-                location={user.location}
-              />
-            </div>
-
-            <div className="mt-8">
-              <HistoryTable
-                history={filteredHistory}
-                totalHistory={history}
-                activeFilter={activeFilter}
-                setActiveFilter={setActiveFilter}
-                onClearHistory={onClearHistory}
-                onReportThreat={handleReportThreat}
-                reportingThreatId={reportingThreatId}
-              />
-            </div>
+            <Routes>
+              <Route path="/" element={dashboardPage} />
+              <Route path="/area-intelligence" element={areaPage} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </>
         )}
       </div>

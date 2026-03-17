@@ -1,18 +1,35 @@
-# React + Vite
+# sentinelAI Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This folder contains the sentinelAI React + Vite frontend.
 
-Currently, two official plugins are available:
+## Commands
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+npm run build
+npm run preview
+```
 
-## React Compiler
+## Environment
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+Create `Frontend/app/.env` from `Frontend/app/.env.example`:
 
-Note: This will impact Vite dev & build performances.
+```env
+VITE_API_URL=http://localhost:5000/api
+```
 
-## Expanding the ESLint configuration
+## Main Routes
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `/` : Threat dashboard
+- `/area-intelligence` : Scams/Frauds Happening In Your Area
+
+## Render Static Hosting Note
+
+Add this rewrite in Render settings so route refresh works:
+- Source: `/*`
+- Destination: `/index.html`
+- Action: `Rewrite`
+
+For full setup and deployment instructions, see the repository root README:
+- `README.md`
