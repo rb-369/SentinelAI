@@ -89,7 +89,6 @@ const screenshotUpload = (req, res, next) => {
 connectDB();
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 app.use(express.json());
 
 app.post("/api/auth/register", authController.register);
