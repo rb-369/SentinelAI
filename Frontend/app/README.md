@@ -16,8 +16,10 @@ npm run preview
 Create `Frontend/app/.env` from `Frontend/app/.env.example`:
 
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=https://sentinelai-backend-server.onrender.com/api
 ```
+
+Note: Frontend calls only the backend URL above. The AI service URL (`https://sentinelai-1-ehft.onrender.com`) is configured in backend via `AI_SERVICE_URL`.
 
 ## Main Routes
 

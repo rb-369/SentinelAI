@@ -2,7 +2,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-ARG VITE_API_URL=http://localhost:5000/api
+ARG VITE_API_URL=https://sentinelai-backend-server.onrender.com/api
 ENV VITE_API_URL=${VITE_API_URL}
 
 COPY package*.json ./
