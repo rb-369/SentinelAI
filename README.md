@@ -22,7 +22,7 @@ It helps users:
 
 ### Mobile View
 
-![sentinelAI mobile view for login](docs/screenshots/phone-login.jpeg)
+![sentinelAI mobile view for login](docs/screenshots/phone-signin.png)
 
 ## Project Structure
 
