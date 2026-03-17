@@ -3,6 +3,8 @@ const TOKEN_KEY = "sentinelai_auth_token";
 
 const getToken = () => localStorage.getItem(TOKEN_KEY);
 
+export const hasToken = () => Boolean(getToken());
+
 export const setToken = (token) => {
   if (token) {
     localStorage.setItem(TOKEN_KEY, token);

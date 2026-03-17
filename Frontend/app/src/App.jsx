@@ -5,6 +5,7 @@ import {
   analyzeThreat,
   clearHistory,
   clearToken,
+  hasToken,
   getAreaThreatIntelligence,
   getCurrentUser,
   getHistory,
@@ -99,6 +100,11 @@ function App() {
   };
 
   const loadSession = async () => {
+    if (!hasToken()) {
+      setUser(null);
+      return;
+    }
+
     try {
       const response = await getCurrentUser();
       setUser(response.data);
