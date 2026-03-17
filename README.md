@@ -18,11 +18,11 @@ It helps users:
 
 ### Desktop View
 
-![sentinelAI desktop view](docs/screenshots/sentinelai-home-desktop.png)
+![sentinelAI desktop view for login](docs/screenshots/desktop-login.png)
 
 ### Mobile View
 
-![sentinelAI mobile view](docs/screenshots/sentinelai-home-mobile.png)
+![sentinelAI mobile view for login](docs/screenshots/phone-login.jpeg)
 
 ## Project Structure
 
