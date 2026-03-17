@@ -7,16 +7,58 @@ const threatController = require("./controllers/threatController");
 const authController = require("./controllers/authController");
 const authMiddleware = require("./middleware/authMiddleware");
 
+const DEFAULT_CORS_ORIGINS = [
+	"http://localhost:5173",
+	"http://127.0.0.1:5173",
+	"https://*.onrender.com",
+];
+
+const FALLBACK_FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "https://sentinelai-2.onrender.com";
+
+const escapeRegExp = (value) => String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const parseCorsOrigins = () => {
-	const raw = process.env.CORS_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173";
-	return raw
+	const fromEnv = (process.env.CORS_ORIGINS || "")
 		.split(",")
 		.map((origin) => origin.trim())
 		.filter(Boolean);
+
+	const merged = [...DEFAULT_CORS_ORIGINS, FALLBACK_FRONTEND_ORIGIN, ...fromEnv];
+return [...new Set(merged)];
+};
+
+const matchOrigin = (origin, allowedOrigin) => {
+	if (allowedOrigin === "*") {
+		return true;
+	}
+
+	if (allowedOrigin.includes("*")) {
+		const wildcardRegex = new RegExp(
+			`^${allowedOrigin.split("*").map(escapeRegExp).join(".*")}$`,
+			"i",
+		);
+		return wildcardRegex.test(origin);
+	}
+
+	return origin.toLowerCase() === allowedOrigin.toLowerCase();
 };
 
 const app = express();
 const corsOrigins = parseCorsOrigins();
+
+const corsOptions = {
+	origin: (origin, callback) => {
+		if (!origin) {
+			return callback(null, true);
+		}
+
+		const allowed = corsOrigins.some((allowedOrigin) => matchOrigin(origin, allowedOrigin));
+		return callback(null, allowed);
+	},
+	credentials: true,
+	optionsSuccessStatus: 204,
+};
+
 const upload = multer({
 	storage: multer.memoryStorage(),
 	limits: { fileSize: 5 * 1024 * 1024 },
@@ -46,12 +88,8 @@ const screenshotUpload = (req, res, next) => {
 
 connectDB();
 
-app.use(
-	cors({
-		origin: corsOrigins.includes("*") ? true : corsOrigins,
-		credentials: true,
-	}),
-);
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 
 app.post("/api/auth/register", authController.register);

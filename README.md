@@ -47,7 +47,7 @@ Copy each example file and fill real values:
 - `MONGO_URI=...`
 - `JWT_SECRET=...`
 - `AI_SERVICE_URL=http://127.0.0.1:8000`
-- `CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173`
+- `CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://*.onrender.com`
 
 ### AI Service env (`Ai-Services/.env`)
 
