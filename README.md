@@ -8,6 +8,22 @@ It helps users:
 - See if others encountered the same attack pattern
 - View Scams/Frauds Happening In Your Area on a dedicated page
 
+## Live App Links
+
+- Frontend (Public App): https://sentinelai-2.onrender.com
+- Backend API Health: https://sentinelai-backend-server.onrender.com/api/health
+- AI Service Health: https://sentinelai-1-ehft.onrender.com/health
+
+## App Screenshots
+
+### Desktop View
+
+![sentinelAI desktop view](docs/screenshots/sentinelai-home-desktop.png)
+
+### Mobile View
+
+![sentinelAI mobile view](docs/screenshots/sentinelai-home-mobile.png)
+
 ## Project Structure
 
 - `Frontend/app` : React + Vite dashboard
