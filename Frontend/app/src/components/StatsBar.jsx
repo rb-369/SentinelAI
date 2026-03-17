@@ -1,8 +1,24 @@
 const CARD_STYLES = [
-  { bg: "bg-indigo-50", text: "text-indigo-700" },
-  { bg: "bg-red-50", text: "text-red-700" },
-  { bg: "bg-amber-50", text: "text-amber-700" },
-  { bg: "bg-blue-50", text: "text-blue-700" },
+  {
+    bg: "bg-blue-500/10 dark:bg-blue-500/20",
+    text: "text-blue-600 dark:text-blue-400",
+    iconBg: "bg-white dark:bg-gray-900",
+  },
+  {
+    bg: "bg-red-500/10 dark:bg-red-500/20",
+    text: "text-red-600 dark:text-red-400",
+    iconBg: "bg-white dark:bg-gray-900",
+  },
+  {
+    bg: "bg-amber-500/10 dark:bg-amber-500/20",
+    text: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-white dark:bg-gray-900",
+  },
+  {
+    bg: "bg-violet-500/10 dark:bg-violet-500/20",
+    text: "text-violet-600 dark:text-violet-400",
+    iconBg: "bg-white dark:bg-gray-900",
+  },
 ];
 
 const StatsIcon = ({ index }) => {
@@ -52,18 +68,22 @@ function StatsBar({ stats }) {
   ];
 
   return (
-    <section className="mb-8">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card, index) => (
           <article
             key={card.label}
-            className={`rounded-xl border border-slate-100 p-5 shadow-sm ${CARD_STYLES[index].bg}`}
+            className={`rounded-xl border p-5 shadow-sm ${CARD_STYLES[index].bg}`}
           >
-            <div className={`inline-flex rounded-lg p-2 ${CARD_STYLES[index].text} bg-white/80`}>
+            <div
+              className={`inline-flex rounded-lg p-2 ${CARD_STYLES[index].text} ${CARD_STYLES[index].iconBg}`}
+            >
               <StatsIcon index={index} />
             </div>
-            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-800">{card.value}</p>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {card.label}
+            </p>
+            <p className="mt-1 text-2xl font-bold text-foreground">{card.value}</p>
           </article>
         ))}
       </div>

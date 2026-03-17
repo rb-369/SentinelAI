@@ -9,6 +9,7 @@ const TYPE_OPTIONS = [
   { label: "Email", value: "email" },
   { label: "Message", value: "message" },
   { label: "Prompt", value: "prompt" },
+  { label: "Screenshot", value: "screenshot" },
 ];
 
 const TYPE_LABELS = {
@@ -16,6 +17,7 @@ const TYPE_LABELS = {
   email: "Email",
   message: "Message",
   prompt: "Prompt",
+  screenshot: "Screenshot",
 };
 
 const formatTime = (value) => {
@@ -30,7 +32,15 @@ const truncate = (value, max = 60) => {
   return `${value.slice(0, max)}...`;
 };
 
-function HistoryTable({ history, totalHistory, activeFilter, setActiveFilter, onClearHistory }) {
+function HistoryTable({
+  history,
+  totalHistory,
+  activeFilter,
+  setActiveFilter,
+  onClearHistory,
+  onReportThreat,
+  reportingThreatId,
+}) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [expandedRowId, setExpandedRowId] = useState(null);
 
@@ -46,27 +56,35 @@ function HistoryTable({ history, totalHistory, activeFilter, setActiveFilter, on
 
   if (!totalHistory.length) {
     return (
-      <section className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-800">Threat History</h3>
-        <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 py-12 text-center">
-          <svg viewBox="0 0 24 24" className="h-10 w-10 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2">
+      <section className="rounded-xl border bg-card p-6 shadow-sm">
+        <h3 className="text-lg font-bold">Threat History</h3>
+        <div className="mt-6 flex flex-col items-center justify-center rounded-xl border-2 border-dashed bg-gray-50 py-12 text-center dark:bg-gray-800/50">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-10 w-10 text-gray-400 dark:text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M12 2 4 5v6c0 5.2 3.4 9.9 8 11 4.6-1.1 8-5.8 8-11V5l-8-3Z" />
             <path d="m9 12 2 2 4-4" />
           </svg>
-          <p className="mt-3 text-base font-semibold text-slate-700">No scans yet</p>
-          <p className="mt-1 text-sm text-slate-500">Run your first analysis to build a threat timeline.</p>
+          <p className="mt-3 text-base font-semibold text-foreground">No scans yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Run your first analysis to build a threat timeline.
+          </p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h3 className="text-lg font-bold text-slate-800">Threat History</h3>
+    <section className="rounded-xl border bg-card p-6 shadow-sm">
+      <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <h3 className="text-lg font-bold">Threat History</h3>
         <button
           onClick={handleClear}
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition-all duration-200 hover:bg-red-100"
+          className="inline-flex items-center justify-center rounded-md border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
         >
           Clear History
         </button>
@@ -78,10 +96,10 @@ function HistoryTable({ history, totalHistory, activeFilter, setActiveFilter, on
             <button
               key={risk}
               onClick={() => setActiveFilter(risk)}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
+              className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
                 activeFilter === risk
-                  ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  ? "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                  : "border-input bg-transparent text-muted-foreground hover:bg-accent"
               }`}
             >
               {risk}
@@ -90,14 +108,17 @@ function HistoryTable({ history, totalHistory, activeFilter, setActiveFilter, on
         </div>
 
         <div className="flex items-center gap-2">
-          <label htmlFor="historyTypeFilter" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label
+            htmlFor="historyTypeFilter"
+            className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+          >
             Type
           </label>
           <select
             id="historyTypeFilter"
             value={typeFilter}
             onChange={(event) => setTypeFilter(event.target.value)}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            className="w-full max-w-xs rounded-md border bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           >
             {TYPE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -109,23 +130,24 @@ function HistoryTable({ history, totalHistory, activeFilter, setActiveFilter, on
       </div>
 
       {!filteredByType.length ? (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">
+        <div className="rounded-lg border-2 border-dashed bg-gray-50 px-4 py-6 text-center text-sm text-muted-foreground dark:bg-gray-800/50">
           No history matches the selected filters.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="min-w-full divide-y divide-border text-left text-sm">
+            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-muted-foreground dark:bg-gray-800/50">
               <tr>
-                <th className="px-4 py-3">Time</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Input</th>
-                <th className="px-4 py-3">Risk Level</th>
-                <th className="px-4 py-3">Score</th>
-                <th className="px-4 py-3">Threat Type</th>
+                <th className="px-4 py-3 font-medium">Time</th>
+                <th className="px-4 py-3 font-medium">Type</th>
+                <th className="px-4 py-3 font-medium">Input</th>
+                <th className="px-4 py-3 font-medium">Risk Level</th>
+                <th className="px-4 py-3 font-medium">Score</th>
+                <th className="px-4 py-3 font-medium">Threat Type</th>
+                <th className="px-4 py-3 font-medium">Report</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
+            <tbody className="divide-y divide-border bg-card text-foreground">
               {filteredByType.map((item, index) => {
                 const rowId = item._id || `${item.createdAt || "scan"}-${index}`;
                 const isExpanded = expandedRowId === rowId;
@@ -134,9 +156,9 @@ function HistoryTable({ history, totalHistory, activeFilter, setActiveFilter, on
                   <Fragment key={rowId}>
                     <tr
                       onClick={() => setExpandedRowId((prev) => (prev === rowId ? null : rowId))}
-                      className="cursor-pointer transition-all duration-200 hover:bg-slate-50"
+                      className="cursor-pointer transition-colors hover:bg-accent"
                     >
-                      <td className="px-4 py-3">{formatTime(item.createdAt)}</td>
+                      <td className="whitespace-nowrap px-4 py-3">{formatTime(item.createdAt)}</td>
                       <td className="px-4 py-3">{TYPE_LABELS[item.inputType] || item.inputType || "-"}</td>
                       <td className="px-4 py-3">{truncate(item.input)}</td>
                       <td className="px-4 py-3">
@@ -144,23 +166,50 @@ function HistoryTable({ history, totalHistory, activeFilter, setActiveFilter, on
                       </td>
                       <td className="px-4 py-3 font-semibold">{Number(item.riskScore) || 0}</td>
                       <td className="px-4 py-3">{item.threatType || "-"}</td>
+                      <td className="px-4 py-3">
+                        {item.isReported ? (
+                          <span className="rounded-full border border-green-600/30 bg-green-600/10 px-2 py-1 text-xs font-semibold text-green-700 dark:text-green-400">
+                            Reported
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onReportThreat?.(item._id);
+                            }}
+                            disabled={!item._id || reportingThreatId === item._id}
+                            className="rounded-md border border-red-500/40 bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-700 transition-colors hover:bg-red-500/20 disabled:pointer-events-none disabled:opacity-60 dark:text-red-400"
+                          >
+                            {reportingThreatId === item._id ? "Reporting..." : "Report"}
+                          </button>
+                        )}
+                      </td>
                     </tr>
 
                     {isExpanded ? (
-                      <tr className="bg-slate-50">
-                        <td colSpan={6} className="px-4 py-4">
+                      <tr className="bg-gray-50 dark:bg-gray-800/50">
+                        <td colSpan={7} className="p-4">
                           <div className="grid gap-4 md:grid-cols-2">
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Full Input</p>
-                              <code className="mt-1 block rounded-lg bg-white px-3 py-2 text-xs text-slate-700">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Full Input
+                              </p>
+                              <code className="mt-1 block rounded-lg bg-white p-3 text-xs text-foreground dark:bg-gray-900">
                                 {item.input}
                               </code>
                             </div>
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Explanation</p>
-                              <p className="mt-1 text-sm text-slate-700">{item.explanation || "No explanation."}</p>
-                              <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Recommended Action</p>
-                              <p className="mt-1 text-sm font-semibold text-slate-800">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Explanation
+                              </p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {item.explanation || "No explanation."}
+                              </p>
+                              <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Recommended Action
+                              </p>
+                              <p className="mt-1 text-sm font-semibold text-foreground">
                                 {item.recommendedAction || "No action provided."}
                               </p>
                             </div>

@@ -51,26 +51,33 @@ function ScannerPanel({ inputType, setInputType, isLoading, onAnalyze }) {
     onAnalyze(inputValue);
   };
 
+  const inputStyles =
+    "w-full rounded-md border bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900";
+  const buttonStyles =
+    "inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:focus:ring-offset-gray-900";
+
   return (
-    <section className="mb-8">
-      <form
-        onSubmit={handleSubmit}
-        className="mx-auto max-w-3xl rounded-xl border border-slate-100 bg-white p-6 shadow-sm"
-      >
-        <div className="mb-4 grid gap-4 md:grid-cols-3 md:items-end">
-          <div className="md:col-span-1">
-            <label htmlFor="inputType" className="mb-2 block text-sm font-semibold text-slate-700">
+    <section>
+      <form onSubmit={handleSubmit} className="rounded-xl border bg-card p-6 shadow-sm">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold">Text & URL Scanner</h3>
+          <p className="text-sm text-muted-foreground">Analyze suspicious text, URLs, or prompts.</p>
+        </div>
+
+        <div className="grid gap-4">
+          <div>
+            <label htmlFor="inputType" className="mb-2 block text-sm font-semibold">
               Input Type
             </label>
             <div className="relative">
-              <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+              <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 <TypeIcon type={inputType} />
               </div>
               <select
                 id="inputType"
                 value={inputType}
                 onChange={(event) => setInputType(event.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                className={`${inputStyles} appearance-none pl-10`}
               >
                 <option value="url">URL</option>
                 <option value="message">Email/Message</option>
@@ -79,35 +86,43 @@ function ScannerPanel({ inputType, setInputType, isLoading, onAnalyze }) {
             </div>
           </div>
 
-          <div className="md:col-span-2">
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="m12 3 4 6-4 6-4-6 4-6Z" />
-                <path d="m12 15 3 6" />
-                <path d="m12 15-3 6" />
-              </svg>
-              Analyze Threat
+          <div>
+            <label htmlFor="threatInput" className="mb-2 block text-sm font-semibold">
+              Suspicious Content
+            </label>
+            <textarea
+              id="threatInput"
+              rows={5}
+              value={inputValue}
+              onChange={(event) => setInputValue(event.target.value)}
+              placeholder={placeholder}
+              className={`${inputStyles} resize-y`}
+            />
+          </div>
+
+          <div>
+            <button type="submit" disabled={isLoading} className={buttonStyles}>
+              {isLoading ? (
+                <LoadingSpinner />
+              ) : (
+                <div className="inline-flex items-center gap-2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="m12 3 4 6-4 6-4-6 4-6Z" />
+                    <path d="m12 15 3 6" />
+                    <path d="m12 15-3 6" />
+                  </svg>
+                  Analyze Threat
+                </div>
+              )}
             </button>
           </div>
         </div>
-
-        <label htmlFor="threatInput" className="mb-2 block text-sm font-semibold text-slate-700">
-          Suspicious Content
-        </label>
-        <textarea
-          id="threatInput"
-          rows={6}
-          value={inputValue}
-          onChange={(event) => setInputValue(event.target.value)}
-          placeholder={placeholder}
-          className="w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-        />
-
-        {isLoading ? <LoadingSpinner /> : null}
       </form>
     </section>
   );

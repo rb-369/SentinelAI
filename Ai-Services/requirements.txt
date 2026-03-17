@@ -6,3 +6,5 @@ langchain-community
 chromadb
 python-dotenv
 pydantic
+python-multipart
+Pillow

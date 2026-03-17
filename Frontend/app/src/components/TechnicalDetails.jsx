@@ -1,8 +1,8 @@
 function Field({ label, value }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-sm text-slate-700">{value || "Not specified"}</p>
+    <div className="rounded-lg border bg-card p-3 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate text-sm text-foreground">{value || "Not specified"}</p>
     </div>
   );
 }
@@ -10,10 +10,10 @@ function Field({ label, value }) {
 function TechnicalDetails({ technicalDetails = {} }) {
   return (
     <section className="mt-6">
-      <details className="group rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-700">
+      <details className="group rounded-xl border bg-gray-50 p-4 dark:bg-gray-800/50">
+        <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-foreground">
           Technical Details (for security teams)
-          <span className="rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 transition-all duration-200 group-open:bg-indigo-100 group-open:text-indigo-700">
+          <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-600 transition-all duration-200 group-open:bg-blue-100 group-open:text-blue-700 dark:bg-gray-700 dark:text-gray-300 dark:group-open:bg-blue-900/50 dark:group-open:text-blue-300">
             Expand
           </span>
         </summary>

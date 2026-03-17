@@ -1,8 +1,9 @@
 const RISK_STYLES = {
-  HIGH: "bg-red-100 text-red-700 border-red-200",
-  MEDIUM: "bg-amber-100 text-amber-700 border-amber-200",
-  LOW: "bg-blue-100 text-blue-700 border-blue-200",
-  SAFE: "bg-green-100 text-green-700 border-green-200",
+  HIGH: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700",
+  MEDIUM:
+    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-700",
+  LOW: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700",
+  SAFE: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700",
 };
 
 function RiskBadge({ riskLevel }) {
